@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+
 namespace FirebaseREST
 {
     public abstract class Query : IDisposable
@@ -19,7 +21,7 @@ namespace FirebaseREST
         public abstract Query EqualTo(bool value);
         public abstract Query EqualTo(double value);
         public abstract Query EqualTo(string value);
-        public abstract void GetValueAsync(int timeout, Action<Response<DataSnapshot>> OnComplete);
+        public abstract Task<Response<DataSnapshot>> GetValue(int timeout);
         public abstract Query LimitToFirst(int limit);
         public abstract Query LimitToLast(int limit);
         public abstract Query OrderByChild(string path);

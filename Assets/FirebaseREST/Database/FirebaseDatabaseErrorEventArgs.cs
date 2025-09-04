@@ -8,6 +8,6 @@ namespace FirebaseREST
         {
             this.error = error;
         }
-        public DatabaseError DatabaseError { get { return error; } }
+        public DatabaseError DatabaseError => error;
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using System.Linq;
-using MiniJSON;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace FirebaseREST
 {
     public partial class DatabaseReference
@@ -21,9 +22,11 @@ namespace FirebaseREST
                 get
                 {
                     if (data == null) return false;
-                    Dictionary<string, object> map = Json.Deserialize(Json.Serialize(data)) as Dictionary<string, object>;
-                    if (map == null) return false;
-                    return map.Values.First() != null;
+                    if (data is JObject jObject)
+                    {
+                        return jObject.Count > 0;
+                    }
+                    return false;
                 }
             }
 
@@ -49,9 +52,11 @@ namespace FirebaseREST
                 {
                     if (data == null)
                         return 0;
-                    Dictionary<string, object> map = Json.Deserialize(data.ToString()) as Dictionary<string, object>;
-                    if (map == null) return 0;
-                    return map.Values.ToList().Count;
+                    if (data is JObject jObject)
+                    {
+                        return jObject.Count;
+                    }
+                    return 0;
                 }
             }
 
@@ -80,12 +85,13 @@ namespace FirebaseREST
                     if (data == null) return null;
 
                     List<DataSnapshot> snapshot = new List<DataSnapshot>();
-                    Dictionary<string, object> map = Json.Deserialize(Json.Serialize(data)) as Dictionary<string, object>;
-                    if (map == null) return snapshot;
-                    foreach (string key in map.Keys)
+                    if (data is JObject jObject)
                     {
-                        string referencePath = dbReference.Reference.TrimEnd('/', ' ') + "/" + key;
-                        snapshot.Add(new FirebaseDataSnapshot(new DatabaseReference(referencePath), map[key].ToString()));
+                        foreach (var child in jObject)
+                        {
+                            string referencePath = dbReference.Reference.TrimEnd('/', ' ') + "/" + child.Key;
+                            snapshot.Add(new FirebaseDataSnapshot(new DatabaseReference(referencePath), child.Value));
+                        }
                     }
                     this.children = snapshot;
                     return snapshot;
@@ -97,27 +103,28 @@ namespace FirebaseREST
                 if (HasChild(path))
                 {
                     string referencePath = dbReference.Reference.TrimEnd('/', ' ') + "/" + path;
-                    Dictionary<string, object> map = Json.Deserialize(Json.Serialize(data)) as Dictionary<string, object>;
-                    return new FirebaseDataSnapshot(new DatabaseReference(referencePath), map[path].ToString());
+                    if (data is JObject jObject)
+                    {
+                        return new FirebaseDataSnapshot(new DatabaseReference(referencePath), jObject[path]);
+                    }
                 }
-                else
-                {
-                    return null;
-                }
+                return null;
             }
 
             public override string GetRawJsonValue()
             {
                 if (data == null) return null;
-                return Json.Serialize(data);
+                return JsonConvert.SerializeObject(data);
             }
 
             public override bool HasChild(string path)
             {
                 if (data == null) return false;
-                Dictionary<string, object> map = Json.Deserialize(Json.Serialize(data)) as Dictionary<string, object>;
-                if (map == null) return false;
-                return map.ContainsKey(path);
+                if (data is JObject jObject)
+                {
+                    return jObject.ContainsKey(path);
+                }
+                return false;
             }
         }
     }

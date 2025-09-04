@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
 using FirebaseREST;
-using MiniJSON;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,21 +27,21 @@ public class ExampleScene : MonoBehaviour
         });
     }
 
-    public void OnButtonClick(string name)
+    public async void OnButtonClick(string name)
     {
         switch (name)
         {
-            case "save":
+            case "save": 
                 if (string.IsNullOrEmpty(pathIF.text) ||
                     string.IsNullOrEmpty(dataIF.text)) return;
                 DatabaseReference saveRef = FirebaseDatabase.Instance.GetReference(pathIF.text);
-                saveRef.SetValueAsync(dataIF.text, 10, null);
+                await saveRef.SetValue(dataIF.text, 10);
                 break;
             case "push":
                 if (string.IsNullOrEmpty(pathIF.text) ||
                     string.IsNullOrEmpty(dataIF.text)) return;
                 DatabaseReference pushRef = FirebaseDatabase.Instance.GetReference(pathIF.text);
-                pushRef.Push(dataIF.text, 10, (null));
+                await pushRef.Push(dataIF.text, 10);
                 break;
             case "listen":
                 if (string.IsNullOrEmpty(pathIF.text)) return;
@@ -68,17 +66,15 @@ public class ExampleScene : MonoBehaviour
                 break;
             case "delete":
                 DatabaseReference deleteref = FirebaseDatabase.Instance.GetReference(pathIF.text);
-                deleteref.RemoveValueAsync(5, (e) =>
+                var e = await deleteref.RemoveValue(5);
+                if (e.success)
                 {
-                    if (e.success)
+                    foreach (Transform t in contentItem.transform.parent)
                     {
-                        foreach (Transform t in contentItem.transform.parent)
-                        {
-                            if (t.Find("Path Text").GetComponent<Text>().text == deleteref.Reference)
-                                Destroy(t.gameObject);
-                        }
+                        if (t.Find("Path Text").GetComponent<Text>().text == deleteref.Reference)
+                            Destroy(t.gameObject);
                     }
-                });
+                }
                 break;
             case "menu1":
                 container1.SetActive(true);
@@ -120,27 +116,18 @@ public class ExampleScene : MonoBehaviour
                 {
                     query = query.EqualTo(equalToIF.text);
                 }
-                int limitToFirst;
-                if (int.TryParse(limitToFirstIF.text, out limitToFirst))
+
+                if (int.TryParse(limitToFirstIF.text, out var limitToFirst))
                 {
                     query = query.LimitToFirst(limitToFirst);
                 }
-                int limitToLast;
-                if (int.TryParse(limitToLastIF.text, out limitToLast))
+
+                if (int.TryParse(limitToLastIF.text, out var limitToLast))
                 {
                     query = query.LimitToLast(limitToLast);
                 }
-                query.GetValueAsync(10, (res) =>
-                {
-                    if (res.success)
-                    {
-                        resultText.text = res.data.GetRawJsonValue();
-                    }
-                    else
-                    {
-                        resultText.text = res.message;
-                    }
-                });
+                var res = await query.GetValue(10);
+                resultText.text = res.success ? res.data.GetRawJsonValue() : res.message;
                 break;
         }
     }

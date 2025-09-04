@@ -6,9 +6,9 @@ namespace FirebaseREST
         int id;
         string eventBuffer, dataBuffer;
 
-        public string EventBuffer { get { return eventBuffer; } }
+        public string EventBuffer => eventBuffer;
 
-        public string DataBuffer { get { return dataBuffer; } }
+        public string DataBuffer => dataBuffer;
 
         public FirebaseEventSourceMessageArgs(string eventBuffer, string dataBuffer)
         {

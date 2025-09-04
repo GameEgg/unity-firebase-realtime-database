@@ -4,10 +4,7 @@ namespace FirebaseREST
     public class FirebaseEventSourceErrorArgs : EventArgs
     {
         string error;
-        public string Error
-        {
-            get { return error; }
-        }
+        public string Error => error;
 
         public FirebaseEventSourceErrorArgs(string error)
         {

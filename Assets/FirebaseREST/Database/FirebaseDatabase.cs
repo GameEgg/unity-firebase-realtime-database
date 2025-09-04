@@ -1,15 +1,6 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using AOT;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
-using UnityEngine.Networking;
 namespace FirebaseREST
 {
     public enum FirebaseDatabaseErrorCode
@@ -30,7 +21,8 @@ namespace FirebaseREST
 
     public partial class FirebaseDatabase : MonoBehaviour
     {
-        public const string SERVER_VALUE_TIMESTAMP = "{\".sv\": \"timestamp\"}";
+        public static JObject SERVER_VALUE_TIMESTAMP => timestamp ??= JObject.Parse("{\".sv\": \"timestamp\"}");
+        static JObject timestamp;
         Dictionary<string, DatabaseReference> databaseReferenceMap = new Dictionary<string, DatabaseReference>();
 
         private static bool applicationIsQuitting = false;
@@ -40,18 +32,13 @@ namespace FirebaseREST
         {
             get
             {
-                if (applicationIsQuitting)
-                {
-                    return null;
-                }
-
                 lock (_lock)
                 {
                     if (_instance == null)
                     {
-                        _instance = (FirebaseDatabase)FindObjectOfType(typeof(FirebaseDatabase));
+                        _instance = FindFirstObjectByType<FirebaseDatabase>();
 
-                        if (FindObjectsOfType(typeof(FirebaseDatabase)).Length > 1)
+                        if (FindObjectsByType<FirebaseDatabase>(FindObjectsSortMode.None).Length > 1)
                         {
                             Debug.LogError("there should never be more than 1 singleton!");
                             return _instance;
@@ -78,9 +65,10 @@ namespace FirebaseREST
         public DatabaseReference GetReference(string url)
         {
             url = url.Trim('/', ' ');
-            if (databaseReferenceMap.ContainsKey(url))
-                return databaseReferenceMap[url];
+            if (databaseReferenceMap.TryGetValue(url, out var reference1))
+                return reference1;
             DatabaseReference reference = new DatabaseReference(url);
+            databaseReferenceMap.Add(url, reference);
             return reference;
         }
 

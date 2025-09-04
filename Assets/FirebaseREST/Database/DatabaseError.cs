@@ -1,4 +1,3 @@
-using System;
 namespace FirebaseREST
 {
     public class DatabaseError
@@ -10,25 +9,10 @@ namespace FirebaseREST
             this.code = code;
         }
 
-        public string Message
-        {
-            get
-            {
-                return code.ToString();
-            }
-        }
+        public string Message => code.ToString();
 
-        public FirebaseDatabaseErrorCode Code
-        {
-            get
-            {
-                return code;
-            }
-        }
+        public FirebaseDatabaseErrorCode Code => code;
 
-        public DatabaseException ToException()
-        {
-            return new DatabaseException(code.ToString());
-        }
+        public DatabaseException ToException() => new(code.ToString());
     }
 }

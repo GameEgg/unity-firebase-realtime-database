@@ -10,7 +10,7 @@ namespace FirebaseREST
             this.snapshot = snapshot;
             this.error = error;
         }
-        public DataSnapshot Snapshot { get { return snapshot; } }
-        public DatabaseError DatabaseError { get { return error; } }
+        public DataSnapshot Snapshot => snapshot;
+        public DatabaseError DatabaseError => error;
     }
 }

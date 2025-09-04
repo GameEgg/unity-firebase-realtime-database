@@ -1,3 +1,8 @@
+> ### Note
+> This is a fork of the original [unity-firebase-realtime-database](https://github.com/edricwilliem/unity-firebase-realtime-database) repository by edricwilliem.
+> 
+> It has been modified to use the `async/await` pattern.
+
 # Unity Firebase Realtime Database REST API
 Write, Read, Remove and Streaming data using [Firebase's database REST API](https://firebase.google.com/docs/reference/rest/database)
 
@@ -19,77 +24,74 @@ WEB_API = "[WEB_API_KEY]";
 
 ### Write Data
 Set Value:
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/save");
-reference.SetValueAsync("mydata", 10,(res) => 
+var response = await reference.SetValue("mydata");
+if (response.success)
 {
-    if (res.success)
-    {
-        Debug.Log("Write success");
-    }
-    else
-    {
-        Debug.Log("Write failed : " + res.message);
-    }
-});
+    Debug.Log("Write success");
+}
+else
+{
+    Debug.Log("Write failed: " + response.message);
+}
 
-reference.SetRawJsonValueAsync("{\"key\":\"value\"}", 10,(res) => 
+DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/save");
+var response = await reference.SetRawJsonValue("{\"key\":\"value\"}");
+if (response.success)
 {
-    if (res.success)
-    {
-        Debug.Log("Write success");
-    }
-    else
-    {
-        Debug.Log("Write failed : " + res.message);
-    }
-});
+    Debug.Log("Write success");
+}
+else
+{
+    Debug.Log("Write failed: " + response.message);
+}
 ```
 Update Child Value:
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/save");
-reference.UpdateValueAsync(new Dictionary<string, object>(){
-    {"child1","value1"},{"child2","value2"}
-}, 10, (res) =>
+var response = await reference.UpdateValue(new Dictionary<string, object>()
 {
-    if (res.success)
-    {
-        Debug.Log("Write success");
-    }
-    else
-    {
-        Debug.Log("Write failed : " + res.message);
-    }
+    {"child1", "value1"},
+    {"child2", "value2"}
 });
+
+if (response.success)
+{
+    Debug.Log("Write success");
+}
+else
+{
+    Debug.Log("Write failed: " + response.message);
+}
 ```
 Push Value:
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/save");
-reference.Push("mydata, 10, (res)=>{
-    if(res.success){
-        Debug.Log("Pushed with id: " + res.data);
-    }
-    else{
-        Debug.Log("Push failed : " + res.message);
-    }
-});
+var response = await reference.Push("mydata");
+if (response.success)
+{
+    Debug.Log("Pushed with id: " + response.data);
+}
+else
+{
+    Debug.Log("Push failed: " + response.message);
+}
 ```
 
 ### Read Data
 Get Value:
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/query");
-reference.GetValueAsync(10, (res) =>
+var response = await reference.GetValue();
+if (response.success)
 {
-    if (res.success)
-    {
-        Debug.Log("Success fetched data : " + res.data.GetRawJsonValue());
-    }
-    else
-    {
-        Debug.Log("Fetch data failed : " + res.message);
-    }
-});
+    Debug.Log("Success fetched data: " + response.data.GetRawJsonValue());
+}
+else
+{
+    Debug.Log("Fetch data failed: " + response.message);
+}
 ```
 Query & Order :
 
@@ -100,43 +102,42 @@ Query & Order :
 * EndAt
 * LimitAtFirst
 * LimitAtLast
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/query");
-reference.OrderByChild("age").StartAt(12).EndAt(20).LimitAtFirst(5).GetValueAsync(10,(res)=>{
-        if (res.success)
-        {
-            Debug.Log("Success fetched data : " +res.data.GetRawJsonValue());
-        }
-        else
-        {
-            Debug.Log("Fetch data failed : " + res.message);
-        }
-});
+var response = await reference.OrderByChild("age").StartAt(12).EndAt(20).LimitAtFirst(5).GetValue();
+if (response.success)
+{
+    Debug.Log("Success fetched data: " + response.data.GetRawJsonValue());
+}
+else
+{
+    Debug.Log("Fetch data failed: " + response.message);
+}
 ```
 
 ### Delete Data
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/delete");
-reference.RemoveValueAsync(10, (e) =>
+var response = await reference.RemoveValue();
+if (response.success)
 {
-    if (e.success)
-    {
-        Debug.Log("Delete data success");
-    }
-    else{
-        Debug.Log("Delete data failed : " + res.message);
-    }
-});
+    Debug.Log("Delete data success");
+}
+else
+{
+    Debug.Log("Delete data failed: " + response.message);
+}
 ```
 
 ### Streaming Data
-```
+```csharp
 DatabaseReference reference = FirebaseDatabase.Instance.GetReference("path/to/stream");
 reference.ValueChanged += (sender, e) =>
 {
     Debug.Log(e.Snapshot.GetRawJsonValue());
 };
-reference.DatabaseError += (sender,e)=>{
+reference.DatabaseError += (sender, e) =>
+{
     Debug.Log(e.DatabaseError.Message);
     Debug.Log("Streaming connection closed");
 };
@@ -145,7 +146,7 @@ reference.DatabaseError += (sender,e)=>{
 ### Authentication
 Set the credential using saved tokens
 
-```
+```csharp
 FirebaseAuth.Instance.TokenData = new TokenData()
 {
     refreshToken = savedRefreshToken,
@@ -154,23 +155,10 @@ FirebaseAuth.Instance.TokenData = new TokenData()
 ```
 
 or Sign In
+```csharp
+var tokenData = await FirebaseAuth.Instance.SignInWithEmail("example@example.com", "example");
 ```
-FirebaseAuth.Instance.SignInWithEmail("example@example.com", "example", 10, (res) =>
-{
-    if (res.success)
-    {
-        Debug.Log("Access token : " + res.data.idToken);
-    }
-    else
-    {
-        Debug.Log("Signed Failed");
-    }
-});
-```
-after signed in, the `FirebaseAuth.Instance.TokenData` will be automatically set 
-
-
-`FirebaseAuth.Instance.TokenData`  will be used for authentication on every database's request.
+after signed in, the `FirebaseAuth.Instance.CurrentTokenData` and  `FirebaseAuth.Instance.CurrentLocalId` will be automatically set 
 
 ## License
 MIT
